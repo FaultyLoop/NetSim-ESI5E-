@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 #-*- coding:UTF-8 -*-
 
-from network.Link import Link
+from netsim.Link import Link
+
 import asyncio
 import random
 
@@ -9,17 +10,18 @@ class Node:
     _nodes = {}
     NAMEUPDATE = "nameUpdate"
 
-    def __init__(self, name, type = "", **kwds):
+    def __init__(self, name, **kwds):
         #Preset
         self._isDead = kwds.get("deadNode", False)
 
         #Local Nodes / Links
-        self._links = []
+        self._links = {}
         self._nodes = []
 
         #Define Random Network Value
         self._address = random.randint((1 << 32) + 1 , (1 << 33) - 2)
         self.name = name
+        Link(self, self, isPair = True)
 
     @property
     def name(self):
@@ -45,24 +47,10 @@ class Node:
         for link in self._links:
             link.updateRemote(Node.NAMEUPDATE)
 
+    def send(self, name: str, message: str):
+        for link in self._links:
+            link = self._links[link]
+            link.sendMessage(name, {"msg": message, "weight": 0})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #
+    def recv(self, message: dict):
+        print(self.name + " :: " + message["msg"])

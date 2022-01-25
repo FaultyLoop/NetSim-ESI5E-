@@ -1,54 +1,54 @@
 {
-      "coaxial": {
-          "Unshielded":  {
-            "speed": 4750000,
-            "ppemi": 8.34,
-            "pprng": 8.15
-          },
-          "Shieled":  {
-            "speed": 4750000,
-            "emint": 0,
-            "pprng": 8.15
-          }
-      },
-      "twisted Pair": {
-        "G100 Unshielded ":{
-          "speed": 125000000,
-          "emint": 6.64,
-          "pprng": 7.4
-        },
-        "G100 Shielded":{
-          "speed": 125000000,
-          "emint": 0,
-          "pprng": 7.4
-        },
-        "G10 Unshielded ":{
-            "speed": 12500000,
-            "emint": 6.64,
-            "pprng": 7.4
-          },
-          "G10 Shielded":{
-            "speed": 12500000,
-            "emint": 0,
-            "pprng": 7.4
-          },
-      },
-      "fiber": {
-        "Single Mode":{
-          "speed": 100000000,
-          "emint": 0,
-          "pprng": 0.01
-        },
-        "Multimode Mode":{
-          "speed": 10000000000,
-          "emint": 0,
-          "pprng": 2.14
-        },
-      },
-      "sattelite": {
-        "Average": {
-          "speed": 2637500,
-          "emint": 14.06
-        }
-      },
-  }
+	"coaxial": {
+		"Unshielded": {
+			"speed": 4750000,
+			"ppemi": 8.34,
+			"pprng": 8.15
+		},
+		"Shieled": {
+			"speed": 4750000,
+			"emint": 0,
+			"pprng": 8.15
+		}
+	},
+	"twisted Pair": {
+		"G100 Unshielded ": {
+			"speed": 125000000,
+			"emint": 6.64,
+			"pprng": 7.4
+		},
+		"G100 Shielded": {
+			"speed": 125000000,
+			"emint": 0,
+			"pprng": 7.4
+		},
+		"G10 Unshielded ": {
+			"speed": 12500000,
+			"emint": 6.64,
+			"pprng": 7.4
+		},
+		"G10 Shielded": {
+			"speed": 12500000,
+			"emint": 0,
+			"pprng": 7.4
+		}
+	},
+	"fiber": {
+		"Single Mode": {
+			"speed": 100000000,
+			"emint": 0,
+			"pprng": 0.01
+		},
+		"Multimode Mode": {
+			"speed": 10000000000,
+			"emint": 0,
+			"pprng": 2.14
+		}
+	},
+	"sattelite": {
+		"Average": {
+			"speed": 2637500,
+			"emint": 14.06
+		}
+	}
+}
