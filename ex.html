@@ -23,10 +23,10 @@ var svg = d3.select("svg"),
 var color = d3.scaleOrdinal(d3.schemeCategory20);
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
-    .force("charge", d3.forceManyBody().strength(-400))
+    .force("charge", d3.forceManyBody().strength(-2000))
     .force("center", d3.forceCenter(width / 2, height / 2));
-d3.json("monreseau.json", function(error, graph) {
-if (error) throw error;
+graph = JSON.parse(localStorage.network)
+
 	  var link = svg.append("g")
 		  .attr("class", "links")
 		   .selectAll("line")
@@ -58,23 +58,20 @@ if (error) throw error;
 	  simulation.force("link")
 		  .links(graph.links);
 	  function ticked() {
-		console.log(l,d)
-	  /*
-		link
-
-			.attr("x1", function(d) { return d.source.x; })
-			.attr("y1", function(d) { return d.source.y; })
-			.attr("x2", function(d) { return d.target.x; })
-			.attr("y2", function(d) { return d.target.y; });
-		node
-			.attr("transform", function(d) {
-			  return "translate(" + d.x + "," + d.y + ")";
-			}
-		*/);
+  		link
+  			.attr("x1", function(d) { return d.source.x; })
+  			.attr("y1", function(d) { return d.source.y; })
+  			.attr("x2", function(d) { return d.target.x; })
+  			.attr("y2", function(d) { return d.target.y; });
+  		node
+  			.attr("transform", function(d) {
+  			  return "translate(" + d.x + "," + d.y + ")";
+  			}
+		);
   }
-});
+
 function dragstarted(d) {
-  if (!d3.event.active) 
+  if (!d3.event.active)
      simulation.alphaTarget(0.3).restart();
      d.fx = d.x;
      d.fy = d.y;
@@ -84,7 +81,7 @@ function dragged(d) {
      d.fy = d3.event.y;
 }
 function dragended(d) {
-  if (!d3.event.active) 
+  if (!d3.event.active)
      simulation.alphaTarget(0);
      d.fx = null;
      d.fy = null;

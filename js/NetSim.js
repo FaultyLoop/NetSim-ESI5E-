@@ -3,7 +3,7 @@ class ObservedData {
 		this.callback = callback ? callback: () => {}
 		this._data = undefined
 	}
-	
+
 	get data() {return this._data}
 	set data(d) {
 		this._data = d
@@ -72,7 +72,7 @@ function mkl(d, s, t) {
 				if (x.link.target == s.id) throw new Exception("break")
 			}
 		)
-		
+
 		s.netint.forEach(
 			(y) => {
 				if (y.link.target == undefined) {
@@ -85,7 +85,7 @@ function mkl(d, s, t) {
 								d.links.push(y.link)
 								throw new Exception("break")
 							}
-						}	
+						}
 					)
 				}
 			}
@@ -96,7 +96,7 @@ function mkl(d, s, t) {
 
 function rml(d, s, t) {
 	if (s == t) return
-	s.netint.forEach( 
+	s.netint.forEach(
 		(i) => {
 			if (i.link.target == t.id) {
 				i.link.target = undefined
@@ -142,7 +142,7 @@ function randNetwork() {
 	var d = new Network("randomized")
 	d.nodes = Array.from({length:n}, (_,i) => new Node("Node_"+i))
 	forceInterface(d.nodes[0], d.nodes.length - 1)
-	
+
 	d.nodes.forEach(
 		(s) => {
 			d.nodes.forEach(
@@ -155,7 +155,8 @@ function randNetwork() {
 			)
 		}
 	)
-	
+
+	data = d
 	localStorage.network = JSON.stringify(d)
 	localStorage.requpdt = 1
 }
@@ -164,10 +165,8 @@ function specNetwork(nodes, name, alwayR0 = false) {
 	var d = new Network(name ?? "default")
 	d.nodes = Array.from({length:nodes}, (_,i) => new Node("Node_"+i))
 	if (alwayR0) forceInterface(d.nodes[0], d.nodes.length - 1)
-		
 	localStorage.network = JSON.stringify(d)
 	localStorage.requpdt = 1
-
 }
 
 function forceInterface(n, i) {
@@ -188,73 +187,80 @@ function chgNodeStatus(e) {
 
 function draw(force) {
 	if (!force && localStorage.requpdt == 0) {return}
+	data = JSON.parse(localStorage.network)
+	init()
 	localStorage.requpdt = 0
-	var d = localStorage.network
-	if (!d) return d3.select("#info").text("Please Generate or Load a Network Configuration")
-	d = JSON.parse(d) ?? []
-	if (d.length == 0) return d3.select("#info").text("Empty Network")
-	
-	d3.selectAll("svg > *").remove()
-	var m = d3.select("svg")
-	var w = m.attr("width")
-    var h = m.attr("height")
-	var s = d3.forceSimulation()
-			  .force("link", d3.forceLink().id((d) => {return d.id;}))
-              .force("charge", d3.forceManyBody().strength(-400))
-              .force("center", d3.forceCenter(w>>1, h>>1))
-	var l = m.append("g")
-		     .attr("class", "links")
-		     .selectAll("line")
-		     .data(d.links)
-		     .enter()
-			 .append("line")
-		     .attr("stroke-width", 5)
-	var n = m.append("g")
-		     .attr("class", "nodes")
-		     .selectAll("g")
-		     .data(d.nodes)
-		     .enter()
-			 .append("g")
-			 .attr("onclick","chgNodeStatus(this)")
-	n.append("circle")
-	 .attr("r", 32)
-     .attr("fill", (d) => {console.log(d);return d.enabled ? "lightgreen":"red"})
-	n.append("text")
-     .text((d) => {return d.name})
-	 .attr('x', -24)
-	 .attr('y', -4)
-	var cb = d3.drag()
-	           .on("start", (d) => {!d3.event.active && s.alphaTarget(0.3).restart();d.fx = d.x ?? 25;d.fy = d.y ?? 25})
-		       .on("drag" , (d) => {d.fx = d.x ?? 0;d.fy = d.y})
-		       .on("end"  , (d) => {!d3.event.active && s.alphaTarget(0);d.fx = null;d.fy = d.y})
-	cb(n)
-	
-	s.nodes(d.nodes)
-	 .on("tick", () => {
-		if (localStorage.locknet == 1) return
-		d = JSON.parse(localStorage.network)
-		n.attr("_", (e) => {
-				var i = d.nodes.findIndex((t) => {return e.id == t.id})
-				d.nodes[i] = e
-			}
-		)
-		n.attr("transform", (e) => {return "translate("+e.x+","+e.y+")"})
-		
-		try {
-			l.attr("x1", (e) => {return d.nodes.find((t) => {return e.source == t.id}).x})
-			 .attr("y1", (e) => {return d.nodes.find((t) => {return e.source == t.id}).y})
-			 .attr("x2", (e) => {return d.nodes.find((t) => {return e.target == t.id}).x})
-			 .attr("y2", (e) => {return d.nodes.find((t) => {return e.target == t.id}).y})
-		} catch (error) {}
-		localStorage.network = JSON.stringify(d)
-	 }
-	)
-	s.force("link").links(d.links)
-
-	console.log("ok")
 }
 
 /*** Setup & Startup ***/
+var svg        = undefined
+var color      = undefined
+var simulation = undefined
+var link       = undefined
+var node       = undefined
+var data       = JSON.parse(localStorage.network ?? "[]")
+
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+     d.fx = d.x;
+     d.fy = d.y;
+}
+function dragged(d) {
+     d.fx = d3.event.x;
+     d.fy = d3.event.y;
+}
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+     d.fx = null;
+     d.fy = null;
+}
+
+function tick() {
+	link.attr("x1", function(d) {return d.source.x;})
+		  .attr("y1", function(d) {return d.source.y;})
+		  .attr("x2", function(d) {return d.target.x;})
+	    .attr("y2", function(d) {return d.target.y;})
+	node.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";})
+			.selectAll("circle")
+			.attr("fill", function (d) {return d.enabled ? "green":"red"})
+}
+
+function init() {
+	  if (simulation != undefined) {
+			simulation.stop()
+			d3.selectAll("svg > *").remove()
+		}
+	  svg        = d3.select("svg");
+  	color      = d3.scaleOrdinal(d3.schemeCategory20);
+		simulation = d3.forceSimulation()
+								   .force("link"  , d3.forceLink().id(function(d) { return d.id; }))
+								   .force("charge", d3.forceManyBody().strength(-2000))
+								   .force("center", d3.forceCenter(svg.attr("width")/2, svg.attr("height")/2));
+		link = svg.append("g")
+	 	              .attr("class", "links")
+							 		.selectAll("line")
+							 		.data(data.links)
+							 		.enter().append("line")
+							 		.attr("stroke-width", 5)
+									.attr("stroke", "#999999")
+	  node = svg.append("g")
+							 	 .attr("class", "nodes")
+							 	 .selectAll("g")
+							 	 .data(data.nodes)
+							 	 .enter().append("g")
+	  node.append("circle").attr("r", 25)
+	  var drag_handler = d3.drag()
+											 	 .on("start", dragstarted)
+											 	 .on("drag", dragged)
+											 	 .on("end", dragended);
+	  drag_handler(node);
+	  var lables = node.append("text").text(function(d) {return d.name;})
+									 	 .attr('x', 0)
+									 	 .attr('y', 0);
+	  simulation.nodes(data.nodes).on("tick", tick);
+	  simulation.force("link").links(data.links);
+}
+
 function getUpdate() {return localStorage.update}
 function setUpdate(delay) {
 	localStorage.requpdt = 1
@@ -262,12 +268,5 @@ function setUpdate(delay) {
 	localStorage.update = setInterval(() => {draw()}, Math.max(Math.min(1e5, delay ?? 0), 50))
 }
 
-function sendMsg(source, target) {
-	var m = JSON.parse(localStorage.network)
-	var s = m.nodes.find((n) => {return n.id == source || n.name == source})
-	var t = m.nodes.find((n) => {return n.id == target || n.name == target})
-	if (!s || !t) return
-	
-}
 /*** Update Loop ***/
-(() => {setUpdate(250)})()
+(() => {init();setUpdate(250)})()
