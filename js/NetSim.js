@@ -46,6 +46,7 @@ class Network {
 }
 
 /*** Utils ***/
+const CRCLRAD = 25
 function fdr(f, d) {
 	var r = new FileReader()
 	r.onload = function(e) {d.data = e.target.result};
@@ -202,12 +203,12 @@ var data       = JSON.parse(localStorage.network ?? "[]")
 
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-     d.fx = d.x;
-     d.fy = d.y;
+     d.fx = Math.max(CRCLRAD, Math.min(d.x, svg.attr("width")-CRCLRAD));
+     d.fy = Math.max(CRCLRAD, Math.min(d.y, svg.attr("height")-CRCLRAD));
 }
 function dragged(d) {
-     d.fx = d3.event.x;
-     d.fy = d3.event.y;
+	   d.fx = Math.max(CRCLRAD, Math.min(d3.event.x, svg.attr("width")-CRCLRAD));
+	   d.fy = Math.max(CRCLRAD, Math.min(d3.event.y, svg.attr("height")-CRCLRAD));
 }
 function dragended(d) {
   if (!d3.event.active) simulation.alphaTarget(0);
@@ -216,10 +217,15 @@ function dragended(d) {
 }
 
 function tick() {
-	link.attr("x1", function(d) {return d.source.x;})
-		  .attr("y1", function(d) {return d.source.y;})
-		  .attr("x2", function(d) {return d.target.x;})
-	    .attr("y2", function(d) {return d.target.y;})
+	link.attr("x1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.x, svg.attr("width" )-CRCLRAD));})
+		  .attr("y1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.y, svg.attr("height")-CRCLRAD));})
+		  .attr("x2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.x, svg.attr("width" )-CRCLRAD));})
+	    .attr("y2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.y, svg.attr("height")-CRCLRAD));})
+			.selectAll("line")
+			.attr("x1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.x, svg.attr("width" )-CRCLRAD));})
+		  .attr("y1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.y, svg.attr("height")-CRCLRAD));})
+		  .attr("x2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.x, svg.attr("width" )-CRCLRAD));})
+	    .attr("y2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.y, svg.attr("height")-CRCLRAD));})
 	node.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";})
 			.selectAll("circle")
 			.attr("fill", function (d) {return d.enabled ? "green":"red"})
@@ -230,7 +236,7 @@ function init() {
 			simulation.stop()
 			d3.selectAll("svg > *").remove()
 		}
-	  svg        = d3.select("svg");
+	  svg = d3.select("svg")
   	color      = d3.scaleOrdinal(d3.schemeCategory20);
 		simulation = d3.forceSimulation()
 								   .force("link"  , d3.forceLink().id(function(d) { return d.id; }))
@@ -240,21 +246,24 @@ function init() {
 	 	              .attr("class", "links")
 							 		.selectAll("line")
 							 		.data(data.links)
-							 		.enter().append("line")
+							 		.enter()
+									.append("line")
 							 		.attr("stroke-width", 5)
 									.attr("stroke", "#999999")
+
 	  node = svg.append("g")
 							 	 .attr("class", "nodes")
 							 	 .selectAll("g")
 							 	 .data(data.nodes)
 							 	 .enter().append("g")
-	  node.append("circle").attr("r", 25)
+	  node.append("circle").attr("r", CRCLRAD)
 	  var drag_handler = d3.drag()
 											 	 .on("start", dragstarted)
 											 	 .on("drag", dragged)
 											 	 .on("end", dragended);
 	  drag_handler(node);
-	  var lables = node.append("text").text(function(d) {return d.name;})
+	  var lables = node.append("text")
+										 .text(function(d) {return d.name;})
 									 	 .attr('x', 0)
 									 	 .attr('y', 0);
 	  simulation.nodes(data.nodes).on("tick", tick);
