@@ -45,19 +45,43 @@
           <li>
             <div class="row">
               <div class="btn-group col-8" role="group">
-                 <button id="menuDeroulant" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                   Fonction de routage
-                   <div class="dropdown-menu" aria-labelledby="menuDeroulant">
-                       <a class="dropdown-item" onclick="setAlgo('A*')" style="color:red;">Djiska (A*)</a>
-                       <a class="dropdown-item" onclick="setAlgo('BT')" style="color:red;">BTree</a>
-                       <a class="dropdown-item" onclick="$('#UserDefined').modal().show()" style="color:red;">User Defined</a>
-                   </div>
-               </button>
+                 <button id="md" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Fonction de routage</button>
+                 <div class="dropdown-menu" aria-labelledby="md">
+                     <a class="dropdown-item" onclick="setAlgo('djiska')" style="color:red;">Djiska (A*)</a>
+                     <a class="dropdown-item" onclick="setAlgo('btree')" style="color:red;">BTree</a>
+                     <a class="dropdown-item" onclick="$('#UserWarning').modal().show()" style="color:red;">User Defined</a>
+                 </div>
               </div>
               <div class="col-4">
                <button id="startRoute" type="button" class="btn btn-secondary" onclick="traceRoute()">Go !</button>
              </div>
            </div>
+          </li>
+          <li>
+              <div class="col 4">
+                --------------------
+              </div>
+          </li>
+          <li>
+            <div class="row">
+              <div class="btn-group col-12" role="group">
+                  <button id="md" type="button" class="btn btn-secondary" aria-haspopup="true" aria-expanded="false" disabled>Start Node</button>
+                  <select id="start-dp" class="form-select"></select>
+              </div>
+            </div>
+          </li>
+          <li>
+              <div class="col 4">
+                --------------------
+              </div>
+          </li>
+          <li>
+            <div class="row">
+              <div class="btn-group col-12" role="group">
+                 <button id="md" type="button" class="btn btn-secondary" aria-haspopup="true" aria-expanded="false" disabled>Target Node</button>
+                 <select id="stop-dp" class="form-select"></select>
+              </div>
+            </div>
           </li>
         </ul>
     	</nav>
@@ -68,23 +92,66 @@
         </svg>
       </div>
 		</div>
-    <div id="UserDefined" class="modal fade" role="dialog">
-      <div class="modal-dialog">
-
-        <!-- Modal content-->
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Modal Header</h4>
-          </div>
-          <div class="modal-body">
-            <p>Some text in the modal.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    <div id="modals" hidden>
+      <div id="UserWarning" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Fonction Utilisateur</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p>Attention: La fonction DOIT être ASYNC et reçoit en paramètre un objet de type Node, libre a vous de modifer l'objet selon votre fonction mais celle-ci doit retourner l'id du prochain noeu</p>
+            </div>
+            <div class="modal-footer">
+              <button onclick="$('#UserDefine').modal().show()" type="button" class="btn btn-default" data-dismiss="modal" >Confirm</button>
+            </div>
           </div>
         </div>
-
+      </div>
+      <div id="UserDefine" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Fonction Utilisateur</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="col-12">
+              </div>
+              <div class="col-12">
+                <textarea id="customFunction" onkeyup="this.innerHTML = this.value">async function <name>(d) {<code>}</textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button onclick="customFunction()" type="button" class="btn btn-default">Confirm</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal" >Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="nodeInfo" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Informations Noeu</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="form-outline">
+                <label class="form-check-label" for="nodeName" value="">Node Name</label>
+                <input class="form-text" type="text" onkeyup="nameChange(this.value)" id="nodeName">
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" onchange="target.enabled = this.checked;tick()" id="nodeCheck">
+                <label class="form-check-label" for="nodeCheck">Active Node</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <script src="js/jquery.min.js"></script>

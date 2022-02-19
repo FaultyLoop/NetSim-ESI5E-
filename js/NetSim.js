@@ -172,6 +172,15 @@ function chgNodeStatus(e) {
 	localStorage.locknet = 0
 }
 
+function nameChange(n) {
+	$("#dsa-"+target.name).text(n)
+	$("#dst-"+target.name).text(n)
+	$("#dsa-"+target.name).prop("id", "dsa-"+n)
+	$("#dst-"+target.name).prop("id", "dst-"+n)
+	target.name = n
+	tick()
+}
+
 async function drawTransfer(source, target, cancel = false) {
 	var coords = []
 	var xindex = undefined
@@ -220,6 +229,27 @@ async function drawTransfer(source, target, cancel = false) {
 	})
 }
 
+function setAlgo(n) {name =n}
+
+async function simulate() {
+}
+
+function customFunction(){
+	var code = document.getElementById("customFunction").value
+	console.log(code)
+	if (!code.startsWith("async function")){
+		alert("Fonction non async, veuillez corriger ")
+		return
+	}
+	try {
+		eval(code)
+		name  = code.split(" ")[2].split("(")[0].trim()
+		$('#UserDefine').modal("hide")
+	} catch (e) {
+			alert(e)
+	}
+}
+
 function draw(force) {
 	if (!force && localStorage.requpdt == 0) {return}
 	data = JSON.parse(localStorage.network)
@@ -233,6 +263,7 @@ var color      = undefined
 var simulation = undefined
 var link       = undefined
 var node       = undefined
+var name			 = undefined
 var data       = JSON.parse(localStorage.network ?? "[]")
 
 function dragstarted(d) {
@@ -258,7 +289,9 @@ function tick() {
 	    .attr("y2", function(d) {if (d.moving) {return $(".links").children()[d.index].getAttribute("y2")}return Math.max(CRCLRAD, Math.min(d.target.y, svg.attr("height")-CRCLRAD));})
 	node.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";})
 			.selectAll("circle")
-			.attr("fill", function (d) {return d.enabled ? "green":"red"})
+			.attr("fill", function (d) {return d.enabled ? "#CCCCCC":"red"})
+	node.selectAll("text")
+			.text(function(d) {return d.name})
 }
 
 function init() {
@@ -266,6 +299,15 @@ function init() {
 			simulation.stop()
 			d3.selectAll("svg > *").remove()
 		}
+		$("#start-dp").empty()
+		$("#stop-dp").empty()
+		data.nodes.forEach(
+			function (n) {
+				$("#start-dp").append("<option id='dsa-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
+				$("#stop-dp").append("<option id='dst-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
+			}
+		)
+
 		localStorage.nosimu = 0
 	  svg = d3.select("svg")
   	color      = d3.scaleOrdinal(d3.schemeCategory20);
@@ -282,12 +324,27 @@ function init() {
 					 		.attr("stroke-width", 5)
 					 		.attr("stroke-linecap", "round")
 							.attr("stroke", "red")
+
 	  node = svg.append("g")
 						 	 .attr("class", "nodes")
 						 	 .selectAll("g")
 						 	 .data(data.nodes)
-						 	 .enter().append("g")
-	  node.append("circle").attr("r", CRCLRAD)
+						 	 .enter()
+							 .append("g")
+			 		     .attr("class", function (d) {return "node"})
+
+	  node.append("circle")
+		    .attr("r", CRCLRAD)
+
+		$(".node").dblclick(
+			function (e) {
+				target = e.target.__data__
+				$("#nodeInfo").modal().show()
+				$("#nodeName").val(target.name)
+				$("#nodeCheck").prop("checked",target.enabled)
+			}
+		)
+
 	  var drag_handler = d3.drag()
 											 	 .on("start", dragstarted)
 											 	 .on("drag", dragged)
@@ -295,8 +352,8 @@ function init() {
 	  drag_handler(node);
 	  var lables = node.append("text")
 										 .text(function(d) {return d.name;})
-									 	 .attr('x', 0)
-									 	 .attr('y', 0);
+									 	 .attr('x', -CRCLRAD>>1)
+									 	 .attr('y', CRCLRAD>>2);
 	  simulation.nodes(data.nodes).on("tick", tick);
 	  simulation.force("link").links(data.links);
 }
