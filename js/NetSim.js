@@ -47,6 +47,8 @@ class Network {
 
 /*** Utils ***/
 const CRCLRAD = 25
+function slp(ms) {return new Promise(r => setTimeout(r, ms));}
+
 function fdr(f, d) {
 	var r = new FileReader()
 	r.onload = function(e) {d.data = e.target.result};
@@ -97,22 +99,7 @@ function mkl(d, s, t) {
 
 function rml(d, s, t) {
 	if (s == t) return
-	s.netint.forEach(
-		(i) => {
-			if (i.link.target == t.id) {
-				i.link.target = undefined
-				d.links.remove(i.link)
-			}
-		}
-	)
-	t.netint.forEach(
-		(i) => {
-			if (i.link.target == s.id) {
-				i.link.target = undefined
-				d.links.remove(i.link)
-			}
-		}
-	)
+	//TODO
 }
 
 /*** NetSim Main function ***/
@@ -179,11 +166,58 @@ function chgNodeStatus(e) {
 	var t = e.children[1].__data__
 	var d = JSON.parse(localStorage.network)
 	var n = d.nodes.findIndex((i) => {return i.name == t.name})
-	e.children[1].__data__.enabled = !e.children[1].__data__.enabled
 	d.nodes[n].enabled = !d.nodes[n].enabled
 	localStorage.network = JSON.stringify(d)
 	localStorage.requpdt = 1
 	localStorage.locknet = 0
+}
+
+async function drawTransfer(source, target) {
+	var coords = []
+	var xindex = undefined
+	var yindex = undefined
+
+	link.select(function(d) {
+		if (d.source.id == source && d.target.id == target) {xindex = d.index;d.moving = true}
+		if (d.source.id == target && d.target.id == source) {yindex = d.index;d.moving = true}
+	})
+	var pad = 0
+	var links = $(".links").children()
+	if (localStorage.speed == undefined) {
+		localStorage.speed = 250
+	}
+	for (var i=2;pad<=80;i++) {
+		var pad = Math.log(i) / Math.log(100) * 100
+		var coords = [
+			parseFloat(links[xindex].getAttribute("x1")),
+			parseFloat(links[xindex].getAttribute("y1")),
+			parseFloat(links[yindex].getAttribute("x1")),
+			parseFloat(links[yindex].getAttribute("y1"))
+		]
+		if (localStorage.debug) {
+			console.log("PAD",pad)
+			console.log("BLUE")
+			console.log("x2", coords[0] + ((coords[0] - coords[2]) / (100/pad)), coords[2])
+			console.log("y2", coords[1] + ((coords[1] - coords[3]) / (100/pad)), coords[3])
+			console.log("RED")
+			console.log("x2", coords[2] + ((coords[2] - coords[0]) / (pad)), coords[0])
+			console.log("y2", coords[3] + ((coords[3] - coords[1]) / (pad)), coords[1])
+			console.log("------------------------------------------")
+		}
+		links[xindex].setAttribute("x2", coords[0] + ((coords[2] - coords[0]) / (100 / pad)))
+		links[xindex].setAttribute("y2", coords[1] + ((coords[3] - coords[1]) / (100 / pad)))
+		links[yindex].setAttribute("x2", coords[0] - ((coords[0] - coords[2]) / (100 / pad)))
+		links[yindex].setAttribute("y2", coords[1] - ((coords[1] - coords[3]) / (100 / pad)))
+		links[xindex].setAttribute("stroke", "lightblue")
+		links[yindex].setAttribute("stroke", "red")
+		await slp(localStorage.speed)
+	}
+	links[yindex].setAttribute("stroke", "transparent")
+	link.select(function(d) {
+		if (d.source.id == source && d.target.id == target) {d.moving = false}
+		if (d.source.id == target && d.target.id == source) {d.moving = false}
+	})
+	console.log("out")
 }
 
 function draw(force) {
@@ -217,15 +251,11 @@ function dragended(d) {
 }
 
 function tick() {
+	if (localStorage.nosimu == 1) return
 	link.attr("x1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.x, svg.attr("width" )-CRCLRAD));})
 		  .attr("y1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.y, svg.attr("height")-CRCLRAD));})
-		  .attr("x2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.x, svg.attr("width" )-CRCLRAD));})
-	    .attr("y2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.y, svg.attr("height")-CRCLRAD));})
-			.selectAll("line")
-			.attr("x1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.x, svg.attr("width" )-CRCLRAD));})
-		  .attr("y1", function(d) {return Math.max(CRCLRAD, Math.min(d.source.y, svg.attr("height")-CRCLRAD));})
-		  .attr("x2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.x, svg.attr("width" )-CRCLRAD));})
-	    .attr("y2", function(d) {return Math.max(CRCLRAD, Math.min(d.target.y, svg.attr("height")-CRCLRAD));})
+		  .attr("x2", function(d) {if (d.moving) {return $(".links").children()[d.index].getAttribute("x2")}return Math.max(CRCLRAD, Math.min(d.target.x, svg.attr("width" )-CRCLRAD));})
+	    .attr("y2", function(d) {if (d.moving) {return $(".links").children()[d.index].getAttribute("y2")}return Math.max(CRCLRAD, Math.min(d.target.y, svg.attr("height")-CRCLRAD));})
 	node.attr("transform", function(d) {return "translate("+d.x+","+d.y+")";})
 			.selectAll("circle")
 			.attr("fill", function (d) {return d.enabled ? "green":"red"})
@@ -236,6 +266,7 @@ function init() {
 			simulation.stop()
 			d3.selectAll("svg > *").remove()
 		}
+		localStorage.nosimu = 0
 	  svg = d3.select("svg")
   	color      = d3.scaleOrdinal(d3.schemeCategory20);
 		simulation = d3.forceSimulation()
@@ -243,19 +274,19 @@ function init() {
 								   .force("charge", d3.forceManyBody().strength(-2000))
 								   .force("center", d3.forceCenter(svg.attr("width")/2, svg.attr("height")/2));
 		link = svg.append("g")
-	 	              .attr("class", "links")
-							 		.selectAll("line")
-							 		.data(data.links)
-							 		.enter()
-									.append("line")
-							 		.attr("stroke-width", 5)
-									.attr("stroke", "#999999")
-
+              .attr("class", "links")
+					 		.selectAll("line")
+					 		.data(data.links)
+					 		.enter()
+							.append("line")
+					 		.attr("stroke-width", 5)
+					 		.attr("stroke-linecap", "round")
+							.attr("stroke", "red")
 	  node = svg.append("g")
-							 	 .attr("class", "nodes")
-							 	 .selectAll("g")
-							 	 .data(data.nodes)
-							 	 .enter().append("g")
+						 	 .attr("class", "nodes")
+						 	 .selectAll("g")
+						 	 .data(data.nodes)
+						 	 .enter().append("g")
 	  node.append("circle").attr("r", CRCLRAD)
 	  var drag_handler = d3.drag()
 											 	 .on("start", dragstarted)
