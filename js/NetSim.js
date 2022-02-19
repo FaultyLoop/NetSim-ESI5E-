@@ -172,10 +172,11 @@ function chgNodeStatus(e) {
 	localStorage.locknet = 0
 }
 
-async function drawTransfer(source, target) {
+async function drawTransfer(source, target, cancel = false) {
 	var coords = []
 	var xindex = undefined
 	var yindex = undefined
+	if (cancel) source = [target, target = source][0]
 
 	link.select(function(d) {
 		if (d.source.id == source && d.target.id == target) {xindex = d.index;d.moving = true}
@@ -208,8 +209,8 @@ async function drawTransfer(source, target) {
 		links[xindex].setAttribute("y2", coords[1] + ((coords[3] - coords[1]) / (100 / pad)))
 		links[yindex].setAttribute("x2", coords[0] - ((coords[0] - coords[2]) / (100 / pad)))
 		links[yindex].setAttribute("y2", coords[1] - ((coords[1] - coords[3]) / (100 / pad)))
-		links[xindex].setAttribute("stroke", "lightblue")
-		links[yindex].setAttribute("stroke", "red")
+		links[xindex].setAttribute("stroke", cancel ? "red":"lightblue")
+		links[yindex].setAttribute("stroke", cancel ? "lightblue":"red")
 		await slp(localStorage.speed)
 	}
 	links[yindex].setAttribute("stroke", "transparent")
@@ -217,7 +218,6 @@ async function drawTransfer(source, target) {
 		if (d.source.id == source && d.target.id == target) {d.moving = false}
 		if (d.source.id == target && d.target.id == source) {d.moving = false}
 	})
-	console.log("out")
 }
 
 function draw(force) {
