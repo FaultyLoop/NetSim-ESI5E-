@@ -1,11 +1,11 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
   <head>
-  	<title>Sidebar 04</title>
+  	<title>NetSim - light network simulator</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/poppins.css">
+		<link rel="stylesheet" href="css/font-awesome.min.css">
 		<link rel="stylesheet" href="css/style.css">
   </head>
   <body>
@@ -17,7 +17,7 @@
 	          <span class="sr-only">Toggle Menu</span>
 	        </button>
         </div>
-	  		<h1><a href="index.html" class="logo">Paramètres du Simulateur</a></h1>
+	  		<h1><a class="logo">Paramètres du Réseau</a></h3>
         <ul class="list-unstyled components mb-5">
           <li>
             <span class="fa fa-sticky-note mr-3"></span>
@@ -30,31 +30,41 @@
             <input type="number" class="form-control" value="4">
           </li>
           <li>
-            <div class="btn-group mr-3" role="group">
-               <button id="menuDeroulant" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                 Fonction de routage
-                 <div class="dropdown-menu" aria-labelledby="menuDeroulant">
-                     <a class="dropdown-item" onclick="setAlgo('A*')" style="color:red;">Djiska (A*)</a>
-                     <a class="dropdown-item" onclick="setAlgo('BT')" style="color:red;">BTree</a>
-                     <a class="dropdown-item" onclick="$('#UserDefined').modal().show()" style="color:red;">User Defined</a>
-                 </div>
-             </button>
+            <div class="row">
+              <button class="btn btn-primary col-6" onclick="randNetwork()">Generer reseau Aléatoire</button>
+              <button class="btn btn-primary col-5" onclick="randNetwork()">Generer un réseau</button>
+            </div>
+            <div class="row">
+              <button class="btn btn-primary col-6" onclick="saveNetwork()">Sauvegarder le Réseau</button>
+              <button class="btn btn-primary col-5" onclick="loadNetwork()">Charger un réseau</button>
+             </div>
+          </li>
+        </ul>
+        <div class="col-12 logo" style="background-color:green;color:white;"><h5>Paramètres du Simulateur</h5></div>
+        <ul class="list-unstyled components mb-5">
+          <li>
+            <div class="row">
+              <div class="btn-group col-8" role="group">
+                 <button id="menuDeroulant" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                   Fonction de routage
+                   <div class="dropdown-menu" aria-labelledby="menuDeroulant">
+                       <a class="dropdown-item" onclick="setAlgo('A*')" style="color:red;">Djiska (A*)</a>
+                       <a class="dropdown-item" onclick="setAlgo('BT')" style="color:red;">BTree</a>
+                       <a class="dropdown-item" onclick="$('#UserDefined').modal().show()" style="color:red;">User Defined</a>
+                   </div>
+               </button>
+              </div>
+              <div class="col-4">
+               <button id="startRoute" type="button" class="btn btn-secondary" onclick="traceRoute()">Go !</button>
+             </div>
            </div>
           </li>
-          <div class="row">
-            <button class="btn btn-primary col-6" onclick="randNetwork()">Generer reseau Aléatoire</button>
-            <button class="btn btn-primary col-5" onclick="randNetwork()">Generer un réseau</button>
-          </div>
-          <div class="row">
-            <button class="btn btn-primary col-6" onclick="saveNetwork()">Sauvegarder le Réseau</button>
-            <button class="btn btn-primary col-5" onclick="loadNetwork()">Charger un réseau</button>
-           </div>
         </ul>
     	</nav>
       <div id="content" class="p-4 p-md-5 pt-5">
         <p class="col-6" id="info"></p>
         <svg width="800" height="600">
-          
+
         </svg>
       </div>
 		</div>
