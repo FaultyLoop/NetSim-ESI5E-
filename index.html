@@ -29,10 +29,20 @@
             Noeuds dans le réseau
             <input id="netnode" type="number" class="form-control" value="4" min="3" max="32">
           </li>
+          <li class="active">
+            <span class="fa fa-home row"></span>
+            Sauvegarde automatique (en ms)
+            <input  class="form-control mr-s-6" id="autoSave" type="number" value="500" min="100">
+            <button class="btn btn-info mr-s-6" onclick="toggleAutosave()">Toggle</button>
+          </li>
           <li>
             <div class="row">
-              <button class="btn btn-primary col-6" onclick="randNetwork()">Generer reseau Aléatoire</button>
-              <button class="btn btn-primary col-5" onclick="randNetwork()">Generer un réseau</button>
+              &nbsp;
+            </div>
+          </li>
+          <li>
+            <div class="row">
+              <button class="btn btn-primary col-6" onclick="randNetwork()">Generer un reseau</button>
             </div>
             <div class="row">
               <button class="btn btn-primary col-6" onclick="saveNetwork()">Sauvegarder le Réseau</button>
@@ -53,7 +63,7 @@
                  </div>
               </div>
               <div class="col-4">
-               <button id="startRoute" type="button" class="btn btn-secondary" onclick="traceRoute()">Go !</button>
+               <button id="startRoute" type="button" class="btn btn-secondary" onclick="simulate()">Go !</button>
              </div>
            </div>
           </li>
@@ -66,7 +76,7 @@
             <div class="row">
               <div class="btn-group col-12" role="group">
                   <button id="md" type="button" class="btn btn-secondary" aria-haspopup="true" aria-expanded="false" disabled>Start Node</button>
-                  <select id="start-dp" class="form-select"></select>
+                  <select id="source-node" class="form-select"></select>
               </div>
             </div>
           </li>
@@ -79,7 +89,7 @@
             <div class="row">
               <div class="btn-group col-12" role="group">
                  <button id="md" type="button" class="btn btn-secondary" aria-haspopup="true" aria-expanded="false" disabled>Target Node</button>
-                 <select id="stop-dp" class="form-select"></select>
+                 <select id="target-node" class="form-select"></select>
               </div>
             </div>
           </li>
@@ -101,7 +111,10 @@
               <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-              <p>Attention: La fonction DOIT être ASYNC et reçoit en paramètre un objet de type Node, libre a vous de modifer l'objet selon votre fonction mais celle-ci doit retourner l'id du prochain noeu</p>
+              <p>Attention: La fonction DOIT être ASYNC et reccursive</p>
+              <p> Elle reçoit en paramètre le noeu courrant et l'id cible</p>
+              <p> A vous d'implèmenter le reste de la logique selon vos besoins !</p>
+              <p> Par exemple en ajoutant des attributs à l'object interface ...</p>
             </div>
             <div class="modal-footer">
               <button onclick="$('#UserDefine').modal().show()" type="button" class="btn btn-default" data-dismiss="modal" >Confirm</button>
@@ -146,6 +159,38 @@
                 <input class="form-check-input" type="checkbox" onchange="target.enabled = this.checked;tick()" id="nodeCheck">
                 <label class="form-check-label" for="nodeCheck">Active Node</label>
               </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="nodePathNOK" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Routage en echec</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p> Il semble que le routage entre les noeux ne soient pas possible !</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="nodePathOK" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Succès du routage</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p>Un chemin à été touver avec l'algorithme utiliser (note: ce n'est pas forcement le chemin le plus optimal !)</p>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>

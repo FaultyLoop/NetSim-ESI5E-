@@ -48,6 +48,7 @@ class Network {
 /*** Utils ***/
 const CRCLRAD = 25
 function slp(ms) {return new Promise(r => setTimeout(r, ms));}
+function fnt(n, i) {n.netint = Array.from({length: i}, (_) => new Interface(n.id))}
 
 function fdr(f, d) {
 	var r = new FileReader()
@@ -101,7 +102,7 @@ function rml(d, s, t) {
 }
 
 function dtf(d) {
-	var o = JSON.parse(JSON.stringify(d))
+	var o = {...d}
 	o.links.forEach((e,i) => {o.links[i] = {source:e.source.id, target:e.target.id, value:e.value}})
 	localStorage.network = JSON.stringify(o)
 	return o
@@ -121,7 +122,6 @@ function loadNetwork() {
 	i.onchange = (e) => {fdr(e.target.files[0], this.data)}
 	i.click()
 }
-
 function saveNetwork() {
 	var o = new ObservedData()
 	var f = $("#netname").val()
@@ -130,13 +130,12 @@ function saveNetwork() {
 	o.data = JSON.stringify(dtf(data))
 	fdw(f+".json", o)
 }
-
 function randNetwork() {
 	var m = $("#netnode").val()
 	var n = Math.min(Math.max(m,  3), 32)
 	var d = new Network("randomized")
 	d.nodes = Array.from({length:n}, (_,i) => new Node("Node_"+i))
-	forceInterface(d.nodes[0], d.nodes.length - 1)
+	fnt(d.nodes[0], d.nodes.length - 1)
 
 	d.nodes.forEach(
 		(s) => {
@@ -154,10 +153,6 @@ function randNetwork() {
 	data = d
 	localStorage.network = JSON.stringify(d)
 	init()
-}
-
-function forceInterface(n, i) {
-	n.netint = Array.from({length: i}, (_) => new Interface(n.id))
 }
 
 function nameChange(o) {
@@ -180,6 +175,50 @@ function nameChange(o) {
 	tick()
 }
 
+/*** Network Simulation ***/
+function customFunction(){
+	var code = document.getElementById("customFunction").value
+	console.log(code)
+	if (!code.startsWith("async function")){
+		alert("Fonction non async, veuillez corriger ")
+		return
+	}
+	try {
+		eval(code)
+		name  = code.split(" ")[2].split("(")[0].trim()
+		$('#UserDefine').modal("hide")
+	} catch (e) {
+			alert(e)
+	}
+}
+function setAlgo(n) {algo = n}
+function getNodeById(i) {
+	var e
+	node.select(function (d) {if (d.id == i) {e=d}})
+	return e
+}
+
+async function djiska(n,t) {
+
+}
+
+async function btree(n, t) {
+		if (nodehist.includes(n.id) || !n.enabled) return false;
+		if (n.id == t) return true;
+		nodehist.push(n.id)
+
+		for (var i=0;i<n.netint.length;i++){
+				var l = n.netint[i].link
+				var tn = getNodeById(l.target)
+				if (tn == undefined || nodehist.includes(l.target) || !tn.enabled) continue
+				await drawTransfer(l.source, l.target)
+				if (await btree(tn,t)) return true;
+				await drawTransfer(l.source, l.target, true)
+		}
+		return false;
+}
+
+
 async function drawTransfer(source, target, cancel = false) {
 	var coords = []
 	var xindex = undefined
@@ -192,9 +231,7 @@ async function drawTransfer(source, target, cancel = false) {
 	})
 	var pad = 0
 	var links = $(".links").children()
-	if (localStorage.speed == undefined) {
-		localStorage.speed = 250
-	}
+	if (localStorage.speed == undefined) localStorage.speed = 150
 	for (var i=2;pad<=80;i++) {
 		var pad = Math.log(i) / Math.log(100) * 100
 		var coords = [
@@ -226,26 +263,20 @@ async function drawTransfer(source, target, cancel = false) {
 		if (d.source.id == source && d.target.id == target) {d.moving = false}
 		if (d.source.id == target && d.target.id == source) {d.moving = false}
 	})
+	tick()
 }
 
-function setAlgo(n) {name =n}
-
-async function simulate() {}
-
-function customFunction(){
-	var code = document.getElementById("customFunction").value
-	console.log(code)
-	if (!code.startsWith("async function")){
-		alert("Fonction non async, veuillez corriger ")
-		return
-	}
-	try {
-		eval(code)
-		name  = code.split(" ")[2].split("(")[0].trim()
-		$('#UserDefine').modal("hide")
-	} catch (e) {
-			alert(e)
-	}
+async function simulate() {
+	link.selectAll("circle")
+    	.attr("stroke", "red")
+	var algof = algo
+	nodehist = []
+	if (algof == undefined || this[algof] == undefined) return
+	var source = data.nodes[$("#source-node").prop("selectedIndex")]
+	var target = data.nodes[$("#target-node").prop("selectedIndex")]
+	if (source.id == target.id) return
+	if (await this[algof](source, target.id)) $("#nodePathOK").modal("show")
+	else $("#nodePathNOK").modal("show")
 }
 
 /*** Setup & Startup ***/
@@ -255,6 +286,7 @@ var simulation = undefined
 var link       = undefined
 var node       = undefined
 var name			 = undefined
+var nodehist   = []
 var data       = JSON.parse(localStorage.network ?? "[]")
 
 function dragstarted(d) {
@@ -287,15 +319,14 @@ function tick() {
 	node.selectAll("text")
 			.text(function(d) {return d.name})
 }
-
 function init() {
 		localStorage.nosimu = 1
-		$("#start-dp").empty()
-		$("#stop-dp").empty()
+		$("#source-node").empty()
+		$("#target-node").empty()
 		data.nodes.forEach(
 			function (n) {
-				$("#start-dp").append("<option id='dsa-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
-				$("#stop-dp").append("<option id='dst-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
+				$("#source-node").append("<option id='dsa-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
+				$("#target-node").append("<option id='dst-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
 			}
 		)
 
@@ -353,11 +384,29 @@ function init() {
 	  simulation.force("link").links(data.links);
 }
 
-function getUpdate() {return localStorage.update}
-function setUpdate(delay) {
-	clearInterval(localStorage.update)
-	localStorage.update = setInterval(() => {}, Math.max(Math.min(1e5, delay ?? 0), 50))
+/*** Other ***/
+function Autosave(delay) {
+	if (localStorage.autoSave == -1) return
+	clearInterval(localStorage.autoSave)
+	localStorage.autoSave = setInterval(() => {localStorage.network = JSON.stringify(dtf(data))}, Math.max(Math.min(1e5, delay ?? 0), 50))
+}
+function stopAutosave() {
+	clearInterval(localStorage.autoSave)
+	localStorage.autoSave = -1
+	$("#autoSave").prop("disabled", true)
+}
+function startAutosave() {
+	clearInterval(localStorage.autoSave)
+	localStorage.autoSave = 0
+	Autosave($("#autoSave").val())
+	$("#autoSave").prop("disabled", false)
+}
+function toggleAutosave() {
+	if (localStorage.autoSave == -1) {
+		startAutosave()
+	} else {
+		stopAutosave()
+	}
 }
 
-/*** Update Loop ***/
-(() => {init();setUpdate(250)})()
+(() => {init();Autosave($("#autoSave").val())})()
