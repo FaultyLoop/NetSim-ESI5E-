@@ -15,9 +15,8 @@ class Node {
 	constructor(name) {
 		this.id = crypto.getRandomValues(new Uint8Array(8)).reduce((m,x) => {return m + ("0"+x.toString(16))})
 		this.netint = Array.from({length: Math.floor(Math.random() * (6 - 2) + 2)}, (_) => new Interface(this.id))
-		console.log(this.netint.length, name)
 		this.name = name
-		this.enabled = false
+		this.enabled = true
 	}
 }
 
@@ -25,7 +24,7 @@ class Link {
 	constructor(source, target){
 		this.source = source
 		this.target = target
-		this.value = 10
+		this.value = Math.floor(Math.random() * 100)
 	}
 }
 
@@ -102,9 +101,9 @@ function rml(d, s, t) {
 }
 
 function dtf(d) {
-	var o = {...d}
-	o.links.forEach((e,i) => {o.links[i] = {source:e.source.id, target:e.target.id, value:e.value}})
-	localStorage.network = JSON.stringify(o)
+	var o = {links:[], nodes:[]}
+	d.links.forEach((e,i) => {o.links[i] = {source:e.source.id, target:e.target.id, value:e.value}})
+	d.nodes.forEach((e,i) => {o.nodes[i] = {...e}})
 	return o
 }
 
@@ -142,9 +141,8 @@ function randNetwork() {
 			d.nodes.forEach(
 				(t) => {
 					if (s == t) return true
-					if (Math.random() > .5) return true
+					if (Math.floor(Math.random() * 100) > $("#linkChance").val()) return true
 					var l = mkl(d, s, t)
-					if (l) console.log("Linking",s.name,t.name)
 				}
 			)
 		}
@@ -178,7 +176,6 @@ function nameChange(o) {
 /*** Network Simulation ***/
 function customFunction(){
 	var code = document.getElementById("customFunction").value
-	console.log(code)
 	if (!code.startsWith("async function")){
 		alert("Fonction non async, veuillez corriger ")
 		return
@@ -194,19 +191,35 @@ function customFunction(){
 function setAlgo(n) {algo = n}
 function getNodeById(i) {
 	var e
-	node.select(function (d) {if (d.id == i) {e=d}})
+	data.nodes.every(function (d) {e=d;return d.id != i})
 	return e
 }
 
-async function djiska(n,t) {
-
+async function djiska(n, t) {
+		if (nodehist.includes(n.id) || !n.enabled) return false;
+		if (n.id == t) return true;
+		nodehist.push(n.id)
+		var s =[]
+		for (var i=0;i<n.netint.length;i++){
+				var l = n.netint[i].link
+				var tn = getNodeById(l.target)
+				if (tn == undefined || nodehist.includes(l.target) || !tn.enabled) continue
+				if (l.target == t) s.splice(0,0,[l,tn])
+				else s.splice(l.value, 0, [l, tn])
+		}
+		for (var i=0;i<s.length;i++) {
+			var l  = s[i][0]
+			var tn = s[i][1]
+			await drawTransfer(l.source, l.target)
+			if (await djiska(tn,t)) return true;
+			await drawTransfer(l.source, l.target, true)
+		}
+		return false;
 }
-
 async function btree(n, t) {
 		if (nodehist.includes(n.id) || !n.enabled) return false;
 		if (n.id == t) return true;
 		nodehist.push(n.id)
-
 		for (var i=0;i<n.netint.length;i++){
 				var l = n.netint[i].link
 				var tn = getNodeById(l.target)
@@ -231,7 +244,7 @@ async function drawTransfer(source, target, cancel = false) {
 	})
 	var pad = 0
 	var links = $(".links").children()
-	if (localStorage.speed == undefined) localStorage.speed = 150
+	if (localStorage.speed == undefined) localStorage.speed = 60
 	for (var i=2;pad<=80;i++) {
 		var pad = Math.log(i) / Math.log(100) * 100
 		var coords = [
@@ -265,9 +278,8 @@ async function drawTransfer(source, target, cancel = false) {
 	})
 	tick()
 }
-
 async function simulate() {
-	link.selectAll("circle")
+	link.selectAll("line")
     	.attr("stroke", "red")
 	var algof = algo
 	nodehist = []
@@ -286,6 +298,7 @@ var simulation = undefined
 var link       = undefined
 var node       = undefined
 var name			 = undefined
+var algo       = "btree"
 var nodehist   = []
 var data       = JSON.parse(localStorage.network ?? "[]")
 
@@ -338,7 +351,7 @@ function init() {
 
 		simulation = d3.forceSimulation()
 									 .force("link"  , d3.forceLink().id(function(d) { return d.id; }))
-									 .force("charge", d3.forceManyBody().strength(-2000))
+									 .force("charge", d3.forceManyBody().strength(-600))
 									 .force("center", d3.forceCenter(svg.attr("width")/2, svg.attr("height")/2));
 
 		localStorage.nosimu = 0
@@ -398,7 +411,7 @@ function stopAutosave() {
 function startAutosave() {
 	clearInterval(localStorage.autoSave)
 	localStorage.autoSave = 0
-	Autosave($("#autoSave").val())
+	Autosave(parseFloat($("#autoSave").val()) * 1000)
 	$("#autoSave").prop("disabled", false)
 }
 function toggleAutosave() {
@@ -409,4 +422,4 @@ function toggleAutosave() {
 	}
 }
 
-(() => {init();Autosave($("#autoSave").val())})()
+(() => {init();Autosave(parseFloat($("#autoSave").val()) * 1000)})()

@@ -31,9 +31,14 @@
           </li>
           <li class="active">
             <span class="fa fa-home row"></span>
-            Sauvegarde automatique (en ms)
-            <input  class="form-control mr-s-6" id="autoSave" type="number" value="500" min="100">
+            Sauvegarde automatique
+            <input  class="form-control mr-s-6" id="autoSave" type="number" step="0.1" value=".5" min=".1">
             <button class="btn btn-info mr-s-6" onclick="toggleAutosave()">Toggle</button>
+          </li>
+          <li class="active">
+            <span class="fa fa-home row"></span>
+            Chance de connexion
+            <input  class="form-control mr-s-6" id="linkChance" type="number" max="100" value="66" min="0">
           </li>
           <li>
             <div class="row">
