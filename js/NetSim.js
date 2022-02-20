@@ -54,12 +54,11 @@ function fdr(f, d) {
 	r.onload = function(e) {d.data = e.target.result};
 	r.readAsText(f);
 }
-
 function fdw(f, d) {
 	var e = document.createElement('a');
-    e.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(d.data))
-    e.setAttribute('download', f);
-    e.click();
+  e.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(d.data))
+  e.setAttribute('download', f);
+  e.click();
 }
 
 function mkl(d, s, t) {
@@ -96,7 +95,6 @@ function mkl(d, s, t) {
 	} catch (e) {return true}
 	return false
 }
-
 function rml(d, s, t) {
 	if (s == t) return
 	//TODO
@@ -118,7 +116,8 @@ function loadNetwork() {
 
 function saveNetwork() {
 	var d = new ObservedData()
-	var f = prompt("Save as :")
+	var f = $("#netname").val()
+	if ($.isEmptyObject(f)) f = prompt("Save as :")
 	if (f == null) return;
 	d.data = localStorage.network ?? "[]"
 	fdw(f+".json", d)
