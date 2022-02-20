@@ -135,22 +135,28 @@ function randNetwork() {
 	var d = new Network("randomized")
 	d.nodes = Array.from({length:n}, (_,i) => new Node("Node_"+i))
 	fnt(d.nodes[0], d.nodes.length - 1)
-
+	var o = []
 	d.nodes.forEach(
 		(s) => {
-			d.nodes.forEach(
-				(t) => {
-					if (s == t) return true
-					if (Math.floor(Math.random() * 100) > $("#linkChance").val()) return true
-					var l = mkl(d, s, t)
-				}
-			)
+			do {
+				d.nodes.forEach(
+					(t) => {
+						if (s == t) return true
+						if (Math.floor(Math.random() * 100) > $("#linkChance").val()) return true
+						var l = mkl(d, s, t)
+						o.push(s.id)
+						o.push(t.id)
+						return false
+					}
+				)
+			} while (!o.includes(s.id))
 		}
 	)
 
 	data = d
 	localStorage.network = JSON.stringify(d)
 	init()
+	tick()
 }
 
 function nameChange(o) {
@@ -230,8 +236,6 @@ async function btree(n, t) {
 		}
 		return false;
 }
-
-
 async function drawTransfer(source, target, cancel = false) {
 	var coords = []
 	var xindex = undefined
@@ -351,11 +355,11 @@ function init() {
 
 		simulation = d3.forceSimulation()
 									 .force("link"  , d3.forceLink().id(function(d) { return d.id; }))
-									 .force("charge", d3.forceManyBody().strength(-600))
+									 .force("charge", d3.forceManyBody().strength(-800))
 									 .force("center", d3.forceCenter(svg.attr("width")/2, svg.attr("height")/2));
 
 		localStorage.nosimu = 0
-  	color      = d3.scaleOrdinal(d3.schemeCategory20);
+  	d3.scaleOrdinal(d3.schemeCategory20);
 		link = svg.append("g")
               .attr("class", "links")
 					 		.selectAll("line")
