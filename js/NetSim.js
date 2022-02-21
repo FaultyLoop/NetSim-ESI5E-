@@ -182,7 +182,15 @@ function nameChange(o) {
 function iniAlgo() {algos.forEach ((n) => {window[n] = new Function("return "+localStorage.getItem(n))()})}
 function updAlgo() {
 	$("#calgo").empty()
-	algos.forEach((n) => {$("#calgo").append('<a class="dropdown-item" onclick="setAlgo(\''+n+'\')" style="color:red;">'+n+'</a>')})
+	algos.forEach((n) => {
+		$("#calgo").append(
+			"<div class='row pl-4'>"+
+			"<button class='form-control btn-info pl-4 col-7' onclick=\"setAlgo(\'"+n+"\')\" style='color:red;'>"+n+"</button>"+
+			"<button class='form-control btn-danger col-3' onclick=\"delAlgo(\'"+n+"\')\" >X</button>"+
+			"</div>"
+		)
+
+	})
 	localStorage.algos = JSON.stringify(algos)
 }
 function updList() {
@@ -195,7 +203,12 @@ function updList() {
 		}
 	)
 }
-
+function delAlgo(name) {
+		delete algos[algos.indexOf(name)]
+		algos = algos.filter(x => x);
+		localStorage.removeItem(name)
+		updAlgo()
+}
 /*** Network Simulation ***/
 function customFunction(){
 	var code = document.getElementById("customFunction").value
