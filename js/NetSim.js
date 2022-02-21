@@ -179,7 +179,14 @@ function nameChange(o) {
 	tick()
 }
 
-function iniAlgo() {algos.forEach ((n) => {window[n] = new Function("return "+localStorage.getItem(n))()})}
+function iniAlgo() {
+	algos.forEach (
+		(n) => {
+			window[n] = new Function("return "+localStorage.getItem(n))()
+			$("#"+n).prop("disabled", true)
+		}
+	)
+}
 function updAlgo() {
 	$("#calgo").empty()
 	algos.forEach((n) => {
@@ -209,6 +216,7 @@ function delAlgo(name) {
 		localStorage.removeItem(name)
 		updAlgo()
 }
+
 /*** Network Simulation ***/
 function customFunction(){
 	var code = document.getElementById("customFunction").value
@@ -218,8 +226,10 @@ function customFunction(){
 	}
 	try {
 		eval(code)
-		var name = code.split(" ")[2].split("(")[0].trim()
+		var name = code.split(" ")[2].split("(")[0].trim().toLocaleLowerCase()
 		if (!algos.includes(name)) algos.push(name)
+		console.log(name)
+		$("#"+name).prop("disabled", true)
 		localStorage.setItem(name, code)
 		window[name] = new Function("return "+code)();
 		setAlgo(name)

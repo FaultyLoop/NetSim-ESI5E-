@@ -62,10 +62,10 @@
               <div class="btn-group col-8" role="group">
                  <button id="md" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Fonction de routage</button>
                  <div class="dropdown-menu" aria-labelledby="md">
-                     <a class="dropdown-item" onclick="setAlgo('djiska')" style="color:red;">Djiska (A*)</a>
-                     <a class="dropdown-item" onclick="setAlgo('btree')" style="color:red;">BTree</a>
+                     <button id="djiska" class="form-control btn-info" onclick="setAlgo('djiska')" style="color:red;">Djiska (A*)</button>
+                     <button id="btree" class="form-control btn-info" onclick="setAlgo('btree')" style="color:red;">BTree</button>
                      <div id="calgo"></div>
-                     <a class="dropdown-item" onclick="$('#UserWarning').modal().show()" style="color:red;">User Defined</a>
+                     <button class="form-control btn-info" onclick="$('#UserWarning').modal().show()" style="color:red;">User Defined</button>
                  </div>
               </div>
               <div class="col-4">
