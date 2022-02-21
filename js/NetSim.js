@@ -179,6 +179,23 @@ function nameChange(o) {
 	tick()
 }
 
+function iniAlgo() {algos.forEach ((n) => {window[n] = new Function("return "+localStorage.getItem(n))()})}
+function updAlgo() {
+	$("#calgo").empty()
+	algos.forEach((n) => {$("#calgo").append('<a class="dropdown-item" onclick="setAlgo(\''+n+'\')" style="color:red;">'+n+'</a>')})
+	localStorage.algos = JSON.stringify(algos)
+}
+function updList() {
+	$("#source-node").empty()
+	$("#target-node").empty()
+	data.nodes.forEach(
+		function (n) {
+			$("#source-node").append("<option id='dsa-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
+			$("#target-node").append("<option id='dst-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
+		}
+	)
+}
+
 /*** Network Simulation ***/
 function customFunction(){
 	var code = document.getElementById("customFunction").value
@@ -188,12 +205,18 @@ function customFunction(){
 	}
 	try {
 		eval(code)
-		name  = code.split(" ")[2].split("(")[0].trim()
+		var name = code.split(" ")[2].split("(")[0].trim()
+		if (!algos.includes(name)) algos.push(name)
+		localStorage.setItem(name, code)
+		window[name] = new Function("return "+code)();
+		setAlgo(name)
+		updAlgo()
 		$('#UserDefine').modal("hide")
 	} catch (e) {
 			alert(e)
 	}
 }
+
 function setAlgo(n) {algo = n}
 function getNodeById(i) {
 	var e
@@ -304,6 +327,7 @@ var node       = undefined
 var name			 = undefined
 var algo       = "btree"
 var nodehist   = []
+var algos      = JSON.parse(localStorage.algos   ?? "[]")
 var data       = JSON.parse(localStorage.network ?? "[]")
 
 function dragstarted(d) {
@@ -338,14 +362,8 @@ function tick() {
 }
 function init() {
 		localStorage.nosimu = 1
-		$("#source-node").empty()
-		$("#target-node").empty()
-		data.nodes.forEach(
-			function (n) {
-				$("#source-node").append("<option id='dsa-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
-				$("#target-node").append("<option id='dst-"+n.name+"'class='dropdown-item' style='color:black;'>"+n.name+"</option>")
-			}
-		)
+		updAlgo()
+		updList()
 
 		svg = d3.select("svg")
 		if (simulation != undefined) {
@@ -426,4 +444,4 @@ function toggleAutosave() {
 	}
 }
 
-(() => {init();Autosave(parseFloat($("#autoSave").val()) * 1000)})()
+(() => {iniAlgo();init();Autosave(parseFloat($("#autoSave").val()) * 1000)})()
